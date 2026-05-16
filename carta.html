@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#1a0c08"/>
+<title>Carta especial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet"/>
+<meta property="og:title" content="Una carta especial para ti ❤️">
+<meta property="og:description" content="Feliz cumple, te amo. Esta carta es para vos, o mi intento de carta ajaj">
+<meta property="og:image" content="preview.jpg">
+<style>
+/* ═══════════════════════════════════════════
+   🎨  EDITA AQUÍ TU CONTENIDO
+   ═══════════════════════════════════════════ */
+:root {
+  /* Texto del sobre (parte de abajo, siempre visible) */
+  --envelope-title: "Feliz cumple yami, que la pases muy lindo ❤️";
+
+  /* Colores del sobre — podés cambiarlos */
+  --env-light:  #e8d5a8;
+  --env-mid:    #d4b87a;
+  --env-dark:   #b8904a;
+  --env-shadow: #7a5518;
+  --seal-color: #c8860a;
+}
+/* ═══════════════════════════════════════════ */
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  background:#1a0c08;
+  font-family:'Cormorant Garamond', Georgia, serif;
+  user-select:none; -webkit-user-select:none;
+  touch-action:none;
+}
+
+/* ── CANVAS BACKGROUND ── */
+#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
+
+/* ── SCENE ── */
+#scene {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  z-index:1;
+}
+
+/* ── TOP LABEL ── */
+#top-label {
+  position:fixed; top:6vh; left:0; right:0;
+  text-align:center; z-index:5; pointer-events:none;
+  font-family:'Dancing Script', cursive;
+  font-size:clamp(1rem,5vw,1.5rem);
+  color:rgba(220,175,90,0.45);
+  letter-spacing:.06em;
+  opacity:0; animation:fadeUp .8s ease 1.2s forwards;
+}
+
+/* ── ENVELOPE WRAPPER ── */
+#env-wrap {
+  position:relative;
+  width:min(88vw, 380px);
+  /* height driven by children */
+  display:flex; flex-direction:column; align-items:center;
+  animation:floatY 5s ease-in-out infinite;
+  transform-style:preserve-3d;
+  perspective:900px;
+}
+
+/* ── ENVELOPE SVG CONTAINER ── */
+#env-svg-wrap {
+  position:relative;
+  width:100%;
+  padding-top:62%; /* aspect ratio envelope */
+  transform-style:preserve-3d;
+  transition:transform .05s linear;
+  filter:drop-shadow(0 24px 48px rgba(0,0,0,.7)) drop-shadow(0 6px 12px rgba(0,0,0,.5));
+}
+
+/* ── ENVELOPE PARTS ── */
+#env-body, #env-flap, #env-title-layer {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+}
+
+/* The flap rotates open from its top edge */
+#env-flap {
+  transform-origin:center top;
+  transform:rotateX(0deg);
+  transition:transform .05s linear;
+  transform-style:preserve-3d;
+}
+
+/* ── TITLE ON LOWER HALF OF ENVELOPE (never covered by flap) ── */
+#env-title-layer {
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding-bottom:16%;
+  pointer-events:none;
+  z-index:3;
+}
+#env-title-text {
+  font-family:'Dancing Script', cursive;
+  font-size:clamp(.9rem,4.5vw,1.3rem);
+  color:rgba(60,25,5,.82);
+  text-align:center;
+  line-height:1.45;
+  max-width:70%;
+  text-shadow:0 1px 0 rgba(255,225,130,.35);
+}
+
+/* ── WAX SEAL ── */
+#seal {
+  position:absolute;
+  left:50%; bottom:-14%;
+  transform:translateX(-50%);
+  width:clamp(44px,14%,64px);
+  height:clamp(44px,14%,64px);
+  z-index:10;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.55));
+  transition:opacity .4s, transform .4s;
+}
+
+/* ── HOLD RING ── */
+#hold-ring {
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:68px; height:68px;
+  pointer-events:none;
+  z-index:20;
+  opacity:0; transition:opacity .15s;
+}
+#hold-ring.active { opacity:1; }
+#ring-track { fill:none; stroke:rgba(210,170,70,.2); stroke-width:3; }
+#ring-fill  { fill:none; stroke:rgba(235,190,70,.95); stroke-width:3;
+  stroke-linecap:round; stroke-dasharray:188; stroke-dashoffset:188;
+  transform:rotate(-90deg); transform-origin:34px 34px;
+  filter:drop-shadow(0 0 5px rgba(235,190,70,.8));
+  transition:stroke-dashoffset .04s linear; }
+
+/* ── LETTER ── */
+#letter-wrap {
+  position:absolute;
+  bottom:38%;
+  left:50%; transform:translateX(-50%);
+  width:90%;
+  z-index:6;
+  display:none;
+  transform-origin:bottom center;
+}
+#letter-wrap.show {
+  display:block;
+  animation:letterRise .9s cubic-bezier(.34,1.5,.64,1) .35s both;
+}
+#letter-paper {
+  background:linear-gradient(170deg,#faf1da 0%,#f2e4bf 55%,#e8d5a8 100%);
+  padding:22px 20px 26px;
+  position:relative;
+  box-shadow:0 -10px 40px rgba(0,0,0,.45);
+  max-height:52svh;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(160,110,40,.3) transparent;
+}
+#letter-paper::-webkit-scrollbar { width:3px; }
+#letter-paper::-webkit-scrollbar-thumb { background:rgba(160,110,40,.3); border-radius:2px; }
+
+/* Ruled lines */
+#letter-paper::before {
+  content:'';
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(transparent,transparent 27px,rgba(120,80,30,.07) 27px,rgba(120,80,30,.07) 28px);
+  pointer-events:none;
+}
+/* Left margin */
+#letter-paper::after {
+  content:'';
+  position:absolute; top:0; bottom:0; left:28px; width:1px;
+  background:rgba(190,100,100,.1);
+  pointer-events:none;
+}
+
+.letter-content { position:relative; z-index:1; text-align:center; padding-left:6px; }
+
+.l-greeting {
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(1.6rem,8vw,2.1rem);
+  color:#5a2008;
+  margin-bottom:6px; line-height:1.2;
+  animation:fadeUp .5s ease var(--d,0s) both;
+}
+.l-heart {
+  color:#922018; font-size:.9rem; margin:4px 0;
+  animation:fadeUp .4s ease var(--d,0s) both;
+}
+.l-body {
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(.84rem,3.8vw,1.02rem);
+  color:#281004; line-height:1.9;
+  margin-bottom:9px; letter-spacing:.01em;
+  animation:fadeUp .5s ease var(--d,0s) both;
+}
+.l-sign {
+  font-family:'Dancing Script',cursive;
+  font-size:clamp(1.35rem,7vw,1.85rem);
+  color:#5a2008; margin-top:14px; line-height:1.3;
+  animation:fadeUp .5s ease var(--d,0s) both;
+}
+
+/* Torn edges */
+.torn { width:100%; height:18px; overflow:hidden; display:block; }
+.torn svg { display:block; width:100%; height:100%; }
+
+/* ── FLOOR SHADOW ── */
+#floor-shadow {
+  width:70%; height:16px; border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,0,0,.5) 0%,transparent 70%);
+  filter:blur(7px);
+  margin-top:-4px;
+  pointer-events:none;
+}
+
+/* ── BOTTOM HINTS ── */
+#hints {
+  position:fixed; bottom:5vh; left:0; right:0;
+  display:flex; align-items:center; justify-content:center;
+  gap:28px; z-index:20; pointer-events:none;
+  opacity:0; animation:fadeUp .8s ease 3s forwards;
+}
+#hints.hide { animation:fadeOut .5s ease forwards; }
+.hint { display:flex; flex-direction:column; align-items:center; gap:7px; }
+.hint span {
+  font-family:'Cormorant Garamond',serif;
+  font-size:.7rem; letter-spacing:.12em; text-transform:uppercase;
+  color:rgba(210,170,80,.65); text-align:center; line-height:1.5;
+}
+.hint-div { width:1px; height:40px; background:rgba(210,170,80,.15); }
+
+/* ── ANIMATIONS ── */
+@keyframes floatY {
+  0%,100% { transform:translateY(0px); }
+  40%     { transform:translateY(-11px); }
+  70%     { transform:translateY(-5px); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeOut {
+  to { opacity:0; }
+}
+@keyframes letterRise {
+  0% {
+    transform:translate(-50%, calc(-50% + 50px)) scaleY(.4);
+    opacity:0;
+  }
+
+  60% {
+    transform:translate(-50%, calc(-50% - 6px)) scaleY(1.02);
+    opacity:1;
+  }
+
+  80% {
+    transform:translate(-50%, calc(-50% + 2px)) scaleY(.99);
+  }
+
+  100% {
+    transform:translate(-50%, -50%) scaleY(1);
+    opacity:1;
+  }
+}
+@keyframes sealPop {
+  0%   { transform:translateX(-50%) scale(1); }
+  40%  { transform:translateX(-50%) scale(1.15); }
+  100% { transform:translateX(-50%) scale(0) translateY(10px); opacity:0; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<p id="top-label">Una carta especial para ti</p>
+
+<div id="scene">
+  <div id="env-wrap">
+
+    <!-- ── LETTER (behind envelope, rises out) ── -->
+    <div id="letter-wrap">
+      <!-- TORN TOP -->
+      <span class="torn">
+        <svg viewBox="0 0 400 18" preserveAspectRatio="none">
+          <path d="M0,18 Q18,2 36,13 Q58,24 78,7 Q98,0 118,15 Q138,26 158,7 Q178,0 200,16 Q222,28 242,9 Q262,0 282,15 Q302,25 322,6 Q342,0 362,13 Q382,23 400,9 L400,18Z" fill="#f2e4bf"/>
+        </svg>
+      </span>
+
+      <div id="letter-paper">
+        <!-- ═══════════════════════════════
+             ✏️  EDITA EL CONTENIDO AQUÍ
+             ═══════════════════════════════ -->
+        <div class="letter-content">
+            <p class="l-greeting" style="--d:.55s">Feliz cumple ❤️</p>
+
+            <p class="l-body" style="--d:.75s">
+            Se que es un año complicado, pero lograste superar grandes cosas a lo largo del tiempo.
+            Vas a poder con todo lo que te propongas y de verdad le pongas amor.
+            Se nota que haces todo con ganas porque te gusta, que lo que te cuesta lo intentas trabajar.
+            </p>
+
+            <p class="l-body" style="--d:.90s">
+            Estoy orgulloso de vos, de la persona que te convertiste y te seguís convirtiendo.
+            Admiro de vos: tu locura, tus bailes espontáneos, esa mirada que me hace sentir que todos los problemas realmente no importan.
+            </p>
+
+            <p class="l-body" style="--d:1.05s">
+            Hoy disfrutá que cumplís un año más, que un año más estás más cerca de alcanzar una meta más, de aprender algo nuevo.
+            </p>
+
+            <p class="l-body" style="--d:1.20s">
+            Te quiero mucho y si todavía te amo mucho más.
+            Me diste muchas alegrías, muchos momentos.
+            De corazón, deseo que tengas un año lleno de cosas lindas ✨
+            </p>
+
+            <p class="l-heart" style="--d:1.35s">♥</p>
+        </div>
+        <!-- ═══════════════════════════════ -->
+      </div>
+
+      <!-- TORN BOTTOM -->
+      <span class="torn">
+        <svg viewBox="0 0 400 18" preserveAspectRatio="none">
+          <path d="M0,0 Q22,16 44,5 Q66,0 88,13 Q110,22 132,5 Q154,0 176,14 Q198,24 220,7 Q242,0 264,14 Q286,24 308,6 Q330,0 352,13 Q374,22 400,8 L400,0Z" fill="#e8d5a8"/>
+        </svg>
+      </span>
+    </div>
+
+    <!-- ── ENVELOPE ── -->
+    <div id="env-svg-wrap">
+
+      <!-- BODY (always visible, no interaction with flap) -->
+      <svg id="env-body" viewBox="0 0 380 236" preserveAspectRatio="none"
+           xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gBody" x1="0" y1="0" x2=".2" y2="1">
+            <stop offset="0%"   stop-color="#eeddb0"/>
+            <stop offset="50%"  stop-color="#d9bf84"/>
+            <stop offset="100%" stop-color="#c4a258"/>
+          </linearGradient>
+          <linearGradient id="gL" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="rgba(80,40,5,.28)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </linearGradient>
+          <linearGradient id="gR" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0%"   stop-color="rgba(55,25,0,.22)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </linearGradient>
+          <linearGradient id="gBot" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="rgba(90,50,10,.28)"/>
+            <stop offset="100%" stop-color="rgba(50,20,0,.12)"/>
+          </linearGradient>
+        </defs>
+        <!-- main rect -->
+        <rect width="380" height="236" rx="7" fill="url(#gBody)"/>
+        <!-- side fold shadows -->
+        <polygon points="0,0 0,236 190,127" fill="url(#gL)"/>
+        <polygon points="380,0 380,236 190,127" fill="url(#gR)"/>
+        <polygon points="0,236 380,236 190,127" fill="url(#gBot)"/>
+        <!-- crease lines -->
+        <line x1="0" y1="0" x2="190" y2="127" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+        <line x1="380" y1="0" x2="190" y2="127" stroke="rgba(0,0,0,.06)" stroke-width="1"/>
+        <line x1="0" y1="236" x2="190" y2="127" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+        <line x1="380" y1="236" x2="190" y2="127" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+        <!-- top highlight -->
+        <line x1="8" y1="1.5" x2="372" y2="1.5" stroke="rgba(255,240,175,.45)" stroke-width="1.5"/>
+        <!-- corner florals left -->
+        <g transform="translate(24,204)" opacity=".32">
+          <ellipse cx="0" cy="0" rx="4" ry="9" fill="none" stroke="#7a5010" stroke-width="1.3" transform="rotate(-32)"/>
+          <ellipse cx="8" cy="-6" rx="3" ry="6" fill="none" stroke="#7a5010" stroke-width="1.1" transform="rotate(18)"/>
+          <path d="M0,0 Q-3,5 -5,10" stroke="#7a5010" stroke-width="1" fill="none" stroke-linecap="round"/>
+          <circle cx="-2" cy="5" r="1.8" fill="#7a5010" opacity=".45"/>
+        </g>
+        <!-- corner florals right -->
+        <g transform="translate(356,204) scale(-1,1)" opacity=".32">
+          <ellipse cx="0" cy="0" rx="4" ry="9" fill="none" stroke="#7a5010" stroke-width="1.3" transform="rotate(-32)"/>
+          <ellipse cx="8" cy="-6" rx="3" ry="6" fill="none" stroke="#7a5010" stroke-width="1.1" transform="rotate(18)"/>
+          <path d="M0,0 Q-3,5 -5,10" stroke="#7a5010" stroke-width="1" fill="none" stroke-linecap="round"/>
+          <circle cx="-2" cy="5" r="1.8" fill="#7a5010" opacity=".45"/>
+        </g>
+      </svg>
+
+      <!-- TITLE on lower envelope body (never covered) -->
+      <div id="env-title-layer">
+        <p id="env-title-text"><!-- filled by JS from CSS var --></p>
+      </div>
+
+      <!-- FLAP (rotates open) — only top half, so title below is always visible -->
+      <svg id="env-flap" viewBox="0 0 380 236" preserveAspectRatio="none"
+           xmlns="http://www.w3.org/2000/svg"
+           style="position:absolute;inset:0;width:100%;height:100%;">
+        <defs>
+          <linearGradient id="gFlap" x1=".1" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#e0cc98"/>
+            <stop offset="100%" stop-color="#d4b870"/>
+          </linearGradient>
+        </defs>
+        <!-- Only the top-half triangle (flap shape). Clip to top 50% -->
+        <clipPath id="flapClip">
+          <rect x="0" y="0" width="380" height="118"/>
+        </clipPath>
+        <g clip-path="url(#flapClip)">
+          <polygon points="0,0 380,0 190,127" fill="url(#gFlap)"/>
+          <line x1="0" y1="0" x2="190" y2="127" stroke="rgba(255,235,155,.2)" stroke-width="1"/>
+          <line x1="380" y1="0" x2="190" y2="127" stroke="rgba(80,40,0,.12)" stroke-width="1"/>
+          <!-- small heart on flap -->
+          <text x="190" y="48" text-anchor="middle" font-size="14" fill="rgba(90,40,5,.22)">♥</text>
+        </g>
+      </svg>
+
+      <!-- WAX SEAL -->
+      <svg id="seal" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="gSeal" cx="38%" cy="28%">
+            <stop offset="0%"   stop-color="#fce090"/>
+            <stop offset="38%"  stop-color="#d4a030"/>
+            <stop offset="75%"  stop-color="#9e6415"/>
+            <stop offset="100%" stop-color="#5e3206"/>
+          </radialGradient>
+          <radialGradient id="gHeart" cx="36%" cy="26%">
+            <stop offset="0%"   stop-color="#fde898"/>
+            <stop offset="100%" stop-color="#a86c10"/>
+          </radialGradient>
+        </defs>
+        <circle cx="32" cy="32" r="31" fill="url(#gSeal)"/>
+        <circle cx="32" cy="32" r="31" fill="none" stroke="rgba(255,220,90,.35)" stroke-width="2"/>
+        <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(175,115,25,.22)" stroke-width="1"/>
+        <path d="M32,46 C32,46 13,34 13,21 C13,14.8 17.8,10 24,12.5 C27,13.9 29.5,16.8 32,20.2 C34.5,16.8 37,13.9 40,12.5 C46.2,10 51,14.8 51,21 C51,34 32,46 32,46Z"
+              fill="url(#gHeart)" stroke="rgba(255,210,75,.4)" stroke-width=".8"/>
+        <ellipse cx="24" cy="18" rx="6" ry="3.5" fill="rgba(255,248,185,.38)" transform="rotate(-25,24,18)"/>
+      </svg>
+
+      <!-- HOLD RING -->
+      <svg id="hold-ring" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg">
+        <circle id="ring-track" cx="34" cy="34" r="28"/>
+        <circle id="ring-fill"  cx="34" cy="34" r="28"/>
+        <text x="34" y="39" text-anchor="middle" font-size="16"
+              fill="rgba(235,190,70,.9)" font-family="serif">✉</text>
+      </svg>
+
+    </div><!-- /env-svg-wrap -->
+
+    <!-- Floor shadow -->
+    <div id="floor-shadow"></div>
+
+  </div><!-- /env-wrap -->
+</div><!-- /scene -->
+
+<!-- BOTTOM HINTS -->
+<div id="hints">
+  <div class="hint">
+    <svg width="26" height="34" viewBox="0 0 26 34" fill="none">
+      <rect x="6" y="2" width="14" height="20" rx="7" stroke="rgba(210,170,80,.72)" stroke-width="1.8" fill="none"/>
+      <line x1="13" y1="22" x2="13" y2="32" stroke="rgba(210,170,80,.72)" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="7"  y1="28" x2="13" y2="32" stroke="rgba(210,170,80,.72)" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="19" y1="28" x2="13" y2="32" stroke="rgba(210,170,80,.72)" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="13" cy="10" r="2.5" fill="rgba(210,170,80,.48)"/>
+    </svg>
+    <span>Mantén presionado<br/>para abrir</span>
+  </div>
+  <div class="hint-div"></div>
+  <div class="hint">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+      <circle cx="15" cy="15" r="12" stroke="rgba(210,170,80,.32)" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <path d="M8,15 L22,15 M15,8 L15,22" stroke="rgba(210,170,80,.52)" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="15" cy="15" r="3" fill="rgba(210,170,80,.62)"/>
+      <path d="M5,8 L2,5 M25,8 L28,5 M5,22 L2,25 M25,22 L28,25"
+            stroke="rgba(210,170,80,.38)" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <span>Arrastra para<br/>rotar</span>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   BACKGROUND CANVAS
+═══════════════════════════════════════════════════════ */
+(function(){
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let w, h, raf, t = 0;
+
+  const dust = Array.from({length:85},()=>({
+    x:Math.random(), y:Math.random(),
+    r:Math.random()*2+.3,
+    vx:(Math.random()-.5)*.00017,
+    vy:-(Math.random()*.00013+.00004),
+    op:Math.random()*.5+.12,
+    ph:Math.random()*Math.PI*2
+  }));
+
+  function resize(){
+    w = canvas.width  = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw(){
+    t++;
+    ctx.clearRect(0,0,w,h);
+
+    // Base gradient — deep warm dark
+    let bg = ctx.createRadialGradient(w*.5,h*.42,0, w*.5,h*.47,w*.95);
+    bg.addColorStop(0,'#2c1508');
+    bg.addColorStop(.45,'#160804');
+    bg.addColorStop(1,'#080302');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+
+    // Central spotlight behind envelope
+    const p = .5+.5*Math.sin(t*.007);
+    let g1 = ctx.createRadialGradient(w*.5,h*.52,0, w*.5,h*.52,w*.52);
+    g1.addColorStop(0,`rgba(215,140,50,${.24*p})`);
+    g1.addColorStop(.5,`rgba(165,85,22,${.13*p})`);
+    g1.addColorStop(1,'transparent');
+    ctx.fillStyle=g1; ctx.fillRect(0,0,w,h);
+
+    // Top-left bokeh
+    const p2=.5+.5*Math.sin(t*.005+1.2);
+    let g2=ctx.createRadialGradient(w*.1,h*.16,0,w*.1,h*.16,w*.4);
+    g2.addColorStop(0,`rgba(200,125,45,${.09*p2})`);
+    g2.addColorStop(1,'transparent');
+    ctx.fillStyle=g2; ctx.fillRect(0,0,w,h);
+
+    // Bottom-right bokeh
+    let g3=ctx.createRadialGradient(w*.9,h*.85,0,w*.9,h*.85,w*.38);
+    g3.addColorStop(0,'rgba(155,75,18,.07)');
+    g3.addColorStop(1,'transparent');
+    ctx.fillStyle=g3; ctx.fillRect(0,0,w,h);
+
+    // Dust
+    dust.forEach(d=>{
+      d.x+=d.vx; d.y+=d.vy;
+      if(d.y<-.01){d.y=1.01;d.x=Math.random();}
+      if(d.x<0||d.x>1) d.vx*=-1;
+      const fl=d.op*(.55+.45*Math.sin(t*.025+d.ph));
+      ctx.beginPath();
+      ctx.arc(d.x*w,d.y*h,d.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(228,182,105,${fl})`;
+      ctx.fill();
+    });
+    raf=requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════════════════════
+   FILL TITLE FROM CSS VAR
+═══════════════════════════════════════════════════════ */
+(function(){
+  const val = getComputedStyle(document.documentElement)
+              .getPropertyValue('--envelope-title').trim()
+              .replace(/^"|"$/g,'').replace(/^'|'$/g,'');
+  document.getElementById('env-title-text').textContent = val;
+})();
+
+/* ═══════════════════════════════════════════════════════
+   MAIN INTERACTION
+═══════════════════════════════════════════════════════ */
+(function(){
+  const envWrap   = document.getElementById('env-wrap');
+  const envSvgWrap= document.getElementById('env-svg-wrap');
+  const flap      = document.getElementById('env-flap');
+  const seal      = document.getElementById('seal');
+  const holdRing  = document.getElementById('hold-ring');
+  const ringFill  = document.getElementById('ring-fill');
+  const letterWrap= document.getElementById('letter-wrap');
+  const hints     = document.getElementById('hints');
+  const floorShadow = document.getElementById('floor-shadow');
+
+  // Tilt state
+  let tiltX = 5, tiltY = -3;
+  let velX = 0, velY = 0;
+  let drag = null, isDragging = false;
+  let opened = false;
+
+  // Float animation
+  let floatT = 0;
+  (function floatLoop(ts){
+    floatT = ts/1000;
+    const fy = Math.sin(floatT*.65)*10 + Math.sin(floatT*1.12)*3.5;
+    envWrap.style.transform = `translateY(${fy}px)`;
+    floorShadow.style.transform = `scaleY(${1 - fy*.012}) translateY(${fy*.25}px)`;
+    requestAnimationFrame(floatLoop);
+  })(0);
+
+  // Inertia loop
+  (function inertiaLoop(){
+    if(!drag){
+      velX*=.9; velY*=.9;
+      if(Math.abs(velX)>.04||Math.abs(velY)>.04){
+        tiltX = Math.max(-26,Math.min(26,tiltX+velX));
+        tiltY = Math.max(-36,Math.min(36,tiltY+velY));
+        applyTilt();
+      }
+    }
+    requestAnimationFrame(inertiaLoop);
+  })();
+
+  function applyTilt(){
+    if(opened) return;
+
+    envSvgWrap.style.transform =
+      `perspective(700px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+  }
+
+  // Hold logic
+  let holdRAF, holdStart, holdActive = false;
+  const HOLD_MS = 1000;
+  const circumference = 2*Math.PI*28; // r=28
+
+  function startHold(){
+    if(opened) return;
+    holdActive = true;
+    holdStart = Date.now();
+    holdRing.classList.add('active');
+    (function tick(){
+      const p = Math.min((Date.now()-holdStart)/HOLD_MS,1);
+      ringFill.style.strokeDashoffset = circumference*(1-p);
+      if(p<1) holdRAF=requestAnimationFrame(tick);
+      else openEnvelope();
+    })();
+  }
+
+  function cancelHold(){
+    holdActive = false;
+    cancelAnimationFrame(holdRAF);
+    holdRing.classList.remove('active');
+    ringFill.style.strokeDashoffset = circumference;
+  }
+
+  function openEnvelope(){
+    drag = null;
+    isDragging = false;
+    velX = 0;
+    velY = 0;
+    opened = true;
+    cancelHold();
+
+    // Pop seal away
+    seal.style.animation = 'sealPop .55s cubic-bezier(.4,0,.6,1) forwards';
+
+    // Animate flap open
+    let angle = 0;
+    (function flapStep(){
+      angle += 3.5;
+      flap.style.transform = `rotateX(${angle}deg)`;
+      if(angle < 178) requestAnimationFrame(flapStep);
+      else {
+        flap.style.transform = 'rotateX(178deg)';
+
+        // Sobre baja y desaparece
+        setTimeout(()=>{
+          envSvgWrap.style.transition = 'transform .7s ease, opacity .7s ease';
+          envSvgWrap.style.transform  = 'perspective(700px) translateY(120%) scale(.85)';
+          envSvgWrap.style.opacity    = '0';
+          floorShadow.style.transition = 'opacity .5s ease';
+          floorShadow.style.opacity    = '0';
+        }, 300);
+
+        // Carta aparece centrada en pantalla
+        setTimeout(()=>{
+          letterWrap.style.position   = 'fixed';
+          letterWrap.style.top        = '50%';
+          letterWrap.style.bottom     = 'auto';
+          letterWrap.style.left       = '50%';
+          letterWrap.style.transform = 'translateX(-50%)';
+          letterWrap.style.width      = 'min(90vw, 400px)';
+          letterWrap.style.zIndex     = '100';
+          letterWrap.classList.add('show');
+        }, 650);
+      }
+    })();
+
+    // Hide hints
+    hints.classList.add('hide');
+  }
+
+  // Pointer events
+  envSvgWrap.addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    isDragging = false;
+    drag = { cx:e.clientX, cy:e.clientY, tx:tiltX, ty:tiltY };
+    velX = 0; velY = 0;
+    envSvgWrap.setPointerCapture(e.pointerId);
+    startHold();
+  });
+
+  window.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    const dx = e.clientX - drag.cx;
+    const dy = e.clientY - drag.cy;
+    if(Math.sqrt(dx*dx+dy*dy) > 7){
+      isDragging = true;
+      cancelHold();
+    }
+    velX = dy*.055; velY = dx*.055;
+    tiltX = Math.max(-26,Math.min(26, drag.tx + dy*.28));
+    tiltY = Math.max(-36,Math.min(36, drag.ty + dx*.28));
+    applyTilt();
+  });
+
+  window.addEventListener('pointerup', e=>{
+    if(!isDragging) cancelHold();
+    drag = null; isDragging = false;
+  });
+
+})();
+</script>
+</body>
+</html>
