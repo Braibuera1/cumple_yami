@@ -504,6 +504,8 @@ html, body {
   const canvas = document.getElementById('bg');
   const ctx = canvas.getContext('2d');
   let w, h, raf, t = 0;
+  const bgImage = new Image();
+  bgImage.src = './preview.jpg';
 
   const dust = Array.from({length:85},()=>({
     x:Math.random(), y:Math.random(),
@@ -521,15 +523,48 @@ html, body {
   resize();
   window.addEventListener('resize', resize);
 
+
+
   function draw(){
     t++;
     ctx.clearRect(0,0,w,h);
 
+    const imgRatio = bgImage.width / bgImage.height;
+    const screenRatio = w / h;
+
+    let drawWidth, drawHeight;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if(screenRatio > imgRatio){
+
+      // pantalla más ancha
+      drawWidth = w;
+      drawHeight = w / imgRatio;
+
+      offsetY = (h - drawHeight) / 2;
+
+    }else{
+
+      // pantalla más alta
+      drawHeight = h;
+      drawWidth = h * imgRatio;
+
+      offsetX = (w - drawWidth) / 2;
+    }
+
+    ctx.drawImage(
+      bgImage,
+      offsetX,
+      offsetY,
+      drawWidth,
+      drawHeight
+    );
     // Base gradient — deep warm dark
     let bg = ctx.createRadialGradient(w*.5,h*.42,0, w*.5,h*.47,w*.95);
-    bg.addColorStop(0,'#2c1508');
-    bg.addColorStop(.45,'#160804');
-    bg.addColorStop(1,'#080302');
+    bg.addColorStop(0,'rgba(44,21,8,.45)');
+    bg.addColorStop(.45,'rgba(22,8,4,.65)');
+    bg.addColorStop(1,'rgba(8,3,2,.88)');
     ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
 
     // Central spotlight behind envelope
